@@ -12,13 +12,7 @@ export default function PublicNavbar() {
         <a href="/#services" className="hover:text-indigo-600 transition-all hover:scale-110">Services</a>
         <a href="/#about" className="hover:text-indigo-600 transition-all hover:scale-110">About Us</a>
         <a href="/#contact" className="hover:text-indigo-600 transition-all hover:scale-110">Contact</a>
-        {/* Chat Link */}
-        <Link
-          to="/patient/messages"
-          className="text-indigo-700 hover:text-indigo-900 transition-all font-semibold hover:scale-110"
-        >
-          Chat
-        </Link>
+
         <Link to="/signup" className="hover:text-indigo-600 transition-all hover:scale-110">Sign Up</Link>
         <Link to="/login" className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-5 py-2 rounded-full hover:from-indigo-700 hover:to-purple-700 transition-all hover:scale-105 shadow-md hover:shadow-lg">
           Login

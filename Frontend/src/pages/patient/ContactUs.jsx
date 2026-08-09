@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import PublicNavbar from '../../components/PublicNavbar';
+import MainLayout from '../../layouts/MainLayout';
 import api from '../../utils/api';
 import { toast } from 'react-hot-toast';
 
 const ContactUs = () => {
-  return (
-    <div className="min-h-screen bg-blue-50">
-      <PublicNavbar />
+  const token = localStorage.getItem('token');
+
+  const content = (
       <div className="p-8 max-w-7xl mx-auto animate-fade-in mt-10">
         <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">
           Contact Support
@@ -69,6 +70,16 @@ const ContactUs = () => {
             </div>
         </div>
       </div>
+  );
+
+  if (token) {
+    return <MainLayout>{content}</MainLayout>;
+  }
+
+  return (
+    <div className="min-h-screen bg-blue-50">
+      <PublicNavbar />
+      {content}
     </div>
   );
 };
