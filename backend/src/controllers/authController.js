@@ -20,7 +20,7 @@ async function registerUser(req, res) {
 
     if (usernameExist) {
       return res.status(409).json({ message: "Username already exists" });
-    }
+    } 
     if (emailExist) {
       return res.status(403).json({ message: "Email already exists, login instead" });
     }
@@ -125,7 +125,8 @@ async function verifyEmail(req, res) {
         `<p>Your OTP is <b>${OTP}</b>. It is valid for 5 minutes.</p>`
       );
     } catch (e) {
-      return res.status(500).json({ message: "Unable to send email" });
+      console.log(`Failed to send email (SMTP error). OTP for ${email} is: ${OTP}`);
+      return res.status(200).json({ message: "OTP logged in server console (SMTP failed)" });
     }
 
     return res.status(200).json({ message: "OTP sent to your email" });
@@ -187,7 +188,12 @@ async function forgetPassword(req, res) {
     user.emailVerificationExpires = Date.now() + 5 * 60 * 1000;
     await user.save();
 
-    await sendEmail(email, "Reset Password OTP", `<h3>Your OTP: ${OTP}</h3>`);
+    try {
+      await sendEmail(email, "Reset Password OTP", `<h3>Your OTP: ${OTP}</h3>`);
+    } catch (e) {
+      console.log(`Failed to send email (SMTP error). OTP for ${email} is: ${OTP}`);
+      return res.status(200).json({ message: "OTP logged in server console (SMTP failed)" });
+    }
 
     return res.status(200).json({ message: "OTP sent to your email" });
 
