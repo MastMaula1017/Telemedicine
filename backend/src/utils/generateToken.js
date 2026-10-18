@@ -5,13 +5,14 @@ const jwt=require("jsonwebtoken")
 function generateToken(newUser)
 {
 
-return jwt.sign({
+    const secretKey = process.env.SECRET_KEY || "super_secret_jwt_key_telemed_123!";
+    return jwt.sign({
         id: newUser._id,
         role: newUser.role,
         email: newUser.email,
         userName: newUser.userName,
         isActive: newUser.isActive
-    },process.env.SECRET_KEY,{
+    }, secretKey, {
         expiresIn: "5d"
     });
 }

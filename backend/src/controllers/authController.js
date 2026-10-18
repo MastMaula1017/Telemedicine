@@ -254,9 +254,9 @@ async function me(req, res) {
 
 
 async function googleCallback(req, res) {
+  const rawFrontend = process.env.FRONTEND_URL || "http://localhost:5173";
+  const frontendURL = rawFrontend.replace(/\/+$/, "");
   try {
-    const frontendURL = process.env.FRONTEND_URL || "http://localhost:5173";
-
     if (req.user.isActive === false) {
       return res.redirect(`${frontendURL}/login?error=blocked`);
     }
@@ -266,7 +266,7 @@ async function googleCallback(req, res) {
     res.redirect(`${frontendURL}/auth/success?token=${token}`);
   } catch (e) {
     console.log(e);
-    res.redirect(`${process.env.FRONTEND_URL}/login?error=auth_failed`);
+    res.redirect(`${frontendURL}/login?error=auth_failed`);
   }
 }
 
