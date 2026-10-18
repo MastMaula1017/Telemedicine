@@ -56,17 +56,10 @@ const getPrescription = async (req, res) => {
     const prescriptions = await Prescription.find({ patient: userId })
       .populate("doctor", "userName email");
 
-    if (!prescriptions.length) {
-      return res.status(404).json({
-        success: false,
-        message: "No prescriptions found",
-      });
-    }
-
     return res.status(200).json({
       success: true,
       count: prescriptions.length,
-      data: prescriptions,
+      data: prescriptions || [],
     });
   } catch (error) {
     console.error("getPrescription Error:", error);

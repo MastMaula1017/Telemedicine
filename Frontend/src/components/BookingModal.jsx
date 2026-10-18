@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import useFetchData from '../hooks/useFetchData';
 import api from '../utils/api';
 
@@ -65,16 +65,6 @@ const BookingModal = ({ doctor, onClose, onSuccess }) => {
         return nextDate; // Return Date object
     };
 
-    const loadScript = (src) => {
-        return new Promise((resolve) => {
-            const script = document.createElement("script");
-            script.src = src;
-            script.onload = () => resolve(true);
-            script.onerror = () => resolve(false);
-            document.body.appendChild(script);
-        });
-    };
-
     const handleBook = async () => {
         if (!selectedDay || !selectedSlot) return;
 
@@ -82,91 +72,33 @@ const BookingModal = ({ doctor, onClose, onSuccess }) => {
         setError('');
 
         try {
-            // 1. Load Razorpay Script
-            const res = await loadScript("https://checkout.razorpay.com/v1/checkout.js");
-            if (!res) {
-                alert("Razorpay SDK failed to load. Are you online?");
-                setBookingLoading(false);
-                return;
-            }
+            const dateObj = getNextDateForDay(selectedDay.day);
+            const dateStr = dateObj ? dateObj.toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
 
-            // 2. Calculate Amount
-            const finalAmount = Math.round(activeDoctor.consultationFee - (activeDoctor.consultationFee * discount) / 100);
-
-            // 3. Create Order
-            const token = localStorage.getItem('token');
-            const orderRes = await api.post("/payment/create-order", { amount: finalAmount }, {
-                 headers: { Authorization: `Bearer ${token}` }
-            });
-
-            if (!orderRes.data.success) {
-                throw new Error("Failed to create payment order");
-            }
-            
-            const { order } = orderRes.data;
-
-            // Fetch Key ID from backend
-            const keyRes = await api.get("/payment/key", {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            const key = keyRes.data.key;
-
-            // 4. Options for Razorpay
-            const options = {
-                key: key, 
-                amount: order.amount,
-                currency: order.currency,
-                name: "TeleMed Health",
-                description: `Consultation with Dr. ${activeDoctor.name}`,
-                order_id: order.id,
-                handler: async function (response) {
-                    // 5. Verify & Book on Success
-                    try {
-                        const dateObj = getNextDateForDay(selectedDay.day);
-                        const dateStr = dateObj.toISOString().split('T')[0];
-
-                        const payload = {
-                            doctorId: activeDoctor.userId._id || activeDoctor.userId || activeDoctor._id,
-                            date: dateStr,
-                            day: selectedDay.day,
-                            timeSlot: {
-                                start: selectedSlot.startTime,
-                                end: selectedSlot.endTime
-                            },
-                            couponCode: isCouponApplied ? couponCode : null,
-                            razorpay_payment_id: response.razorpay_payment_id,
-                            razorpay_order_id: response.razorpay_order_id,
-                            razorpay_signature: response.razorpay_signature
-                        };
-
-                        await api.post('/appointments/book', payload);
-                        if (onSuccess) onSuccess();
-                        onClose();
-                    } catch (bookErr) {
-                         console.error(bookErr);
-                         setError("Payment successful but booking failed. Please contact support.");
-                    }
+            const payload = {
+                doctorId: activeDoctor.userId?._id || activeDoctor.userId || activeDoctor._id,
+                date: dateStr,
+                day: selectedDay.day,
+                timeSlot: {
+                    start: selectedSlot.startTime,
+                    end: selectedSlot.endTime
                 },
-                prefill: {
-                    name: "User", // Can fetch from context
-                    email: "user@example.com",
-                    contact: "9999999999"
-                },
-                theme: {
-                    color: "#3399cc"
-                }
+                couponCode: isCouponApplied ? couponCode : null
             };
 
-            const paymentObject = new window.Razorpay(options);
-            paymentObject.open();
+            await api.post('/appointments/book', payload);
+            if (onSuccess) onSuccess();
+            onClose();
 
         } catch (err) {
             console.error(err);
-            setError(err.response?.data?.message || 'Failed to initiate payment');
+            setError(err.response?.data?.message || 'Failed to book appointment. Please try again.');
         } finally {
             setBookingLoading(false);
         }
     };
+
+    const finalPayAmount = Math.round(activeDoctor.consultationFee - (activeDoctor.consultationFee * discount) / 100);
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
@@ -222,7 +154,7 @@ const BookingModal = ({ doctor, onClose, onSuccess }) => {
                                     <label className="block text-sm font-semibold text-slate-700 mb-3">
                                         Available Slots for {selectedDay.day} 
                                         <span className="font-normal text-slate-400 ml-2">
-                                            ({getNextDateForDay(selectedDay.day).toLocaleDateString()})
+                                            ({getNextDateForDay(selectedDay.day)?.toLocaleDateString()})
                                         </span>
                                     </label>
                                     <div className="grid grid-cols-2 gap-3">
@@ -302,8 +234,8 @@ const BookingModal = ({ doctor, onClose, onSuccess }) => {
                                         </div>
                                     )}
                                     <div className="flex justify-between text-base font-bold text-slate-800 pt-1">
-                                        <span>Total to Pay</span>
-                                        <span>₹{Math.round(activeDoctor.consultationFee - (activeDoctor.consultationFee * discount) / 100)}</span>
+                                        <span>Total Consultation Fee</span>
+                                        <span className="text-green-600 font-extrabold">₹{finalPayAmount}</span>
                                     </div>
                                 </div>
                             </div>
@@ -318,10 +250,16 @@ const BookingModal = ({ doctor, onClose, onSuccess }) => {
                                 <button
                                     onClick={handleBook}
                                     disabled={!selectedDay || !selectedSlot || bookingLoading}
-                                    className="flex-1 py-3 bg-primary text-white font-semibold rounded-xl hover:bg-primary-hover shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex justify-center w-full"
+                                    className="flex-1 py-3 bg-primary text-white font-semibold rounded-xl hover:bg-primary-hover shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex justify-center items-center w-full"
                                 >
-                                    {bookingLoading ? <span className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full mr-2"></span> : null}
-                                    {bookingLoading ? 'Confirming...' : 'Confirm Booking'}
+                                    {bookingLoading ? (
+                                        <>
+                                            <span className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full mr-2"></span>
+                                            <span>Booking...</span>
+                                        </>
+                                    ) : (
+                                        <span>Confirm Booking</span>
+                                    )}
                                 </button>
                             </div>
                         </>

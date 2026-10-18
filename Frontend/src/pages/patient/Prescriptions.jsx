@@ -4,6 +4,34 @@ import Card from '../../components/ui/Card';
 import useFetchData from '../../hooks/useFetchData';
 import api from '../../utils/api';
 
+const formatFrequency = (freq) => {
+    if (!freq) return 'As directed';
+    const clean = String(freq).trim();
+    const map = {
+        '1': 'Once daily (1-0-0)',
+        '2': 'Twice a day (1-0-1)',
+        '3': '3 times a day (1-1-1)',
+        '4': '4 times a day (1-1-1-1)',
+        '1-0-0': 'Once daily - Morning (1-0-0)',
+        '0-0-1': 'Once daily - Night (0-0-1)',
+        '1-0-1': 'Twice a day (1-0-1)',
+        '1-1-1': '3 times a day (1-1-1)',
+    };
+    return map[clean] || clean;
+};
+
+const formatDuration = (dur) => {
+    if (!dur) return '';
+    const clean = String(dur).trim();
+    if (/^\d+$/.test(clean)) {
+        return `For ${clean} Days`;
+    }
+    if (/for/i.test(clean)) {
+        return clean;
+    }
+    return `For ${clean}`;
+};
+
 const Prescriptions = () => {
     const { data, loading, error, refetch } = useFetchData('/user/prescription');
     const prescriptions = Array.isArray(data?.data) ? data.data : [];
@@ -24,7 +52,7 @@ const Prescriptions = () => {
         <MainLayout>
              <div className="mb-8 animate-slide-up">
                 <h1 className="text-3xl font-bold text-slate-900">My Prescriptions</h1>
-                <p className="text-slate-500 mt-2">View and download your digital prescriptions.</p>
+                <p className="text-slate-500 mt-2">View your digital prescriptions and treatment plans.</p>
             </div>
 
             <div className="animate-slide-up" style={{ animationDelay: '0.1s' }}>
@@ -61,13 +89,29 @@ const Prescriptions = () => {
                                    )}
                                </div>
 
-                               <div className="mb-4 bg-slate-50 p-3 rounded-lg">
-                                   <h4 className="text-sm font-semibold text-slate-700 mb-2 uppercase tracking-wide">Medicines</h4>
-                                   <div className="space-y-2">
+                               <div className="mb-4 bg-slate-50/80 p-3.5 rounded-xl border border-slate-100">
+                                   <h4 className="text-xs font-bold text-slate-500 mb-2.5 uppercase tracking-wider flex items-center gap-1.5">
+                                       <span>💊</span> Prescribed Medicines
+                                   </h4>
+                                   <div className="space-y-2.5">
                                        {presc.medicines?.map((med, idx) => (
-                                           <div key={idx} className="flex justify-between items-start text-sm border-b border-slate-200 last:border-0 pb-1 last:pb-0">
-                                               <span className="font-medium text-slate-800">{med.name}</span>
-                                               <span className="text-slate-500 text-xs">{med.dosage} • {med.frequency} • {med.duration}</span>
+                                           <div key={idx} className="bg-white p-3 rounded-lg border border-slate-200/80 shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                                               <div className="flex items-center gap-2">
+                                                   <span className="font-bold text-slate-800 text-sm">{med.name}</span>
+                                                   {med.dosage && (
+                                                       <span className="text-xs font-semibold px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-100">
+                                                           {med.dosage}
+                                                       </span>
+                                                   )}
+                                               </div>
+                                               <div className="flex flex-wrap items-center gap-1.5 text-xs">
+                                                   <span className="px-2.5 py-1 rounded-md bg-emerald-50 text-emerald-700 font-medium border border-emerald-100 flex items-center gap-1">
+                                                       <span>🕒</span> {formatFrequency(med.frequency)}
+                                                   </span>
+                                                   <span className="px-2.5 py-1 rounded-md bg-purple-50 text-purple-700 font-medium border border-purple-100 flex items-center gap-1">
+                                                       <span>📅</span> {formatDuration(med.duration)}
+                                                   </span>
+                                               </div>
                                            </div>
                                        ))}
                                    </div>
@@ -78,20 +122,16 @@ const Prescriptions = () => {
                                        <p className="text-sm text-slate-500 italic">"{presc.notes}"</p>
                                    </div>
                                )}
-                               
-                               <div className="mt-4 pt-4 border-t border-slate-100 flex justify-end gap-3">
+                                
+                               <div className="mt-4 pt-4 border-t border-slate-100 flex justify-end">
                                    <button 
                                         onClick={() => handleDelete(presc._id)}
-                                        className="text-sm font-medium text-red-500 hover:text-red-700 flex items-center gap-1"
+                                        className="text-sm font-medium text-red-500 hover:text-red-700 flex items-center gap-1 hover:bg-red-50 px-3 py-1.5 rounded-lg transition-colors"
                                     >
                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                        </svg>
                                        Delete
-                                   </button>
-                                   <button className="text-sm font-medium text-primary hover:text-primary-hover flex items-center gap-1">
-                                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-                                       Download PDF
                                    </button>
                                </div>
                            </Card>

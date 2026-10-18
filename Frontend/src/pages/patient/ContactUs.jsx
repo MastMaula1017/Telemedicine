@@ -14,7 +14,6 @@ const ContactUs = () => {
         </h1>
         
         <div className="max-w-5xl mx-auto bg-white rounded-3xl shadow-xl overflow-hidden flex flex-col md:flex-row">
-            {/* Contact Info Side */}
             <div className="md:w-2/5 bg-gradient-to-br from-indigo-900 to-purple-900 p-10 text-white flex flex-col justify-between">
                 <div>
                     <h3 className="text-2xl font-bold mb-6">Contact Information</h3>
@@ -56,14 +55,12 @@ const ContactUs = () => {
                 </div>
                 
                 <div className="mt-10 flex gap-4">
-                        {/* Socials placeholder */}
-                        <div className="w-8 h-8 bg-white/20 rounded-full hover:bg-white/40 cursor-pointer transition-colors"></div>
-                        <div className="w-8 h-8 bg-white/20 rounded-full hover:bg-white/40 cursor-pointer transition-colors"></div>
-                        <div className="w-8 h-8 bg-white/20 rounded-full hover:bg-white/40 cursor-pointer transition-colors"></div>
+                    <div className="w-8 h-8 bg-white/20 rounded-full hover:bg-white/40 cursor-pointer transition-colors"></div>
+                    <div className="w-8 h-8 bg-white/20 rounded-full hover:bg-white/40 cursor-pointer transition-colors"></div>
+                    <div className="w-8 h-8 bg-white/20 rounded-full hover:bg-white/40 cursor-pointer transition-colors"></div>
                 </div>
             </div>
 
-            {/* Form Side */}
             <div className="md:w-3/5 p-10">
                 <h3 className="text-2xl font-bold text-indigo-900 mb-6">Send us a Message</h3>
                 <ContactForm />
@@ -124,7 +121,7 @@ const ContactForm = () => {
                         onChange={handleChange}
                         required
                         className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all" 
-                        placeholder="John" 
+                        placeholder="shridhar" 
                     />
                 </div>
                 <div>
@@ -148,7 +145,7 @@ const ContactForm = () => {
                     onChange={handleChange}
                     required
                     className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all" 
-                    placeholder="john@example.com" 
+                    placeholder="shridhar@example.com" 
                 />
             </div>
             <div>

@@ -2,7 +2,6 @@
   const User = require("../models/User");
   const Doctor = require("../models/Doctor");
   const Coupon = require("../models/Coupon");
-  const { verifyPaymentSignature } = require("./paymentController");
 const { getIO } = require("../socket");
 
 
@@ -16,7 +15,7 @@ const { getIO } = require("../socket");
         });
       }
 
-      const { doctorId, date, day, timeSlot, couponCode, razorpay_payment_id, razorpay_order_id, razorpay_signature } = req.body;
+      const { doctorId, date, day, timeSlot, couponCode } = req.body;
       const patient = req.user.id;
 
       if (!doctorId || !date || !day || !timeSlot?.start || !timeSlot?.end) {
@@ -24,29 +23,6 @@ const { getIO } = require("../socket");
           message: "All fields are required",
         });
       }
-
-      // Verify Payment first
-      if (!razorpay_payment_id || !razorpay_order_id || !razorpay_signature) {
-           return res.status(400).json({ message: "Payment details missing" });
-      }
-
-      // Check for Idempotency: If this payment was already used for a booking, return it.
-      const existingPaymentAppt = await Appointment.findOne({ 
-          'paymentInfo.paymentId': razorpay_payment_id 
-      });
-
-      if (existingPaymentAppt) {
-          return res.status(200).json({
-              message: "Appointment already booked with this payment",
-              appointment: existingPaymentAppt
-          });
-      }
-
-      const isSignatureValid = verifyPaymentSignature(razorpay_order_id, razorpay_payment_id, razorpay_signature);
-      if (!isSignatureValid) {
-          return res.status(400).json({ message: "Invalid payment signature" });
-      }
-
 
       // get real doctor profile (doctorId = userId)
       const doctor = await Doctor.findOne({ userId: doctorId });
@@ -86,6 +62,8 @@ const { getIO } = require("../socket");
           }
       }
 
+      const finalAmount = Math.round(doctor.consultationFee * (1 - discountApplied / 100));
+
       const appointment = await Appointment.create({
         patient,
         doctor: doctor._id,
@@ -94,9 +72,9 @@ const { getIO } = require("../socket");
         timeSlot,
         status: "pending",
         paymentInfo: {
-            paymentId: razorpay_payment_id,
-            orderId: razorpay_order_id,
-            amount: doctor.consultationFee * (1 - discountApplied/100) // approximate
+            paymentId: `PAY_${Date.now()}`,
+            orderId: `ORD_${Date.now()}`,
+            amount: finalAmount
         }
       });
 
