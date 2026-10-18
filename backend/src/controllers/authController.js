@@ -71,6 +71,12 @@ async function login(req, res) {
       return res.status(404).json({ message: "User not found, please sign up" });
     }
 
+    if (!user.password) {
+      return res.status(400).json({
+        message: "This account was registered using Google. Please click 'Sign in with Google' below."
+      });
+    }
+
     const isCorrect = await bcrypt.compare(password, user.password);
     if (!isCorrect) {
       return res.status(401).json({ message: "Incorrect password" });
@@ -94,7 +100,7 @@ async function login(req, res) {
     });
   } catch (e) {
     console.log(e);
-    return res.status(503).json({ message: "Server error" });
+    return res.status(500).json({ message: "Server error. Please try again later." });
   }
 }
 
