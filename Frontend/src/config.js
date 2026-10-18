@@ -3,7 +3,9 @@
 let rawApi =
 	import.meta.env.VITE_API_BASE_URL ||
 	import.meta.env.VITE_API_URL ||
-	'http://localhost:5000/api';
+	(import.meta.env.PROD
+		? 'https://telemedicine-backend-7z21.onrender.com/api'
+		: 'http://localhost:5000/api');
 
 // Strip whitespace and trailing slashes
 rawApi = rawApi.trim().replace(/\/+$/, '');
